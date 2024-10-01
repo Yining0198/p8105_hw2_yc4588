@@ -158,9 +158,9 @@ trash_wheel_df
  `dumpster`: the number of the dumpster (Mr:651; Professor:119; Gwynnda:262).  
  `month`: the month of the year.(January - December)  
  `year`: the year of the data collection.(Mr:2014-2024; Professor:2017-2024; Gwynnda:2021-2024)   
- `date`: the date of the data collection.( Mr:2014-05-16~2024-06-11; Professor: 2017-01-02~2024-05-30; 2021-07-03~2024-06-07)  
- `weight_tons`: the weight of trash collected in tons.(Mr:0.780 - 5.620; Professor:0.610-3.750; Gwynnda:0.770-4.240)  
- `volum_cubic_yards`: the volume of trash collected in cubic yards.(Mr:7.0~20.0; Professor:6.0-18.0; Gwynnda:5.0-15.0)  
+ `date`: the date of the data collection.( Mr:2014-05-1 to 2024-06-11; Professor: 2017-01-02 to 2024-05-30; 2021-07-03 to 2024-06-07)  
+ `weight_tons`: the weight of trash collected in tons.(Mr:0.780-5.620; Professor:0.610-3.750; Gwynnda:0.770-4.240)  
+ `volum_cubic_yards`: the volume of trash collected in cubic yards.(Mr:7.0-20.0; Professor:6.0-18.0; Gwynnda:5.0-15.0)  
  `plastic_botles`: the number of plastic bottles collected.(Mr:80-5940; Professor:657-9830; Gwynnda:0-5400)  
  `polystyrene`: the number of polystyrene collected.(Mr:20-6540; Professor:180-11528; Gwynnda:0~5)  
  `cigarette_butts`: the number of cigarette butts collected.(Mr:500-31000; Professor:3800-33320; Gwynnda:0.0-640.0)  
