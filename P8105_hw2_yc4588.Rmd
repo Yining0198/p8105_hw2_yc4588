@@ -38,9 +38,19 @@ ent_exit_df <- ent_exit |>
          vending, 
          entrance_type, 
          ada)
+ent_exit_df
 ```
 * The dataset contains information about subway entrances and exits in New York City, with variables including _line_, _station_name_, _station_latitude_, _station_longitude_, _route1-route11_, _entry_, _vending_, _entrance_type_, and _ada_.
+ `line` is a categorical variable describing the NYC transit subway lines.  
+ `station_name` is a categorical variable describing the names of the subway stations.  
+ `station_latitude` and `station_longitude` are numerical variables representing the latitude and longitude of the subway stations.  
+ `route1` to `route11` are categorical variables describing the routes associated with each subway station.  
+ `entry` is a logical variable indicating whether the entrance allows entry.  
+ `vending` is a categorical variable indicating whether vending machines are available.  
+ `entrance_type` is a categorical variable describing the type of entrance.  
+ `ada` is a categorical variable indicating whether the station is ADA-compliant.  
 * cleaning steps:
+  1. Using na=c("NA", "", ".") to clean the missing values.
   1. Clean column names using the `janitor::clean_names()` function.
   2. Convert the `entry` column to a logical variable using the `case_match()` function.
   3. Select the columns of interest with `select()` function, including `line`, `station_name`, `station_latitude`, `station_longitude`, `route1` to `route11`, `entry`, `vending`, `entrance_type`, and `ada`.
@@ -79,7 +89,6 @@ ent_exit_df <- ent_exit_df |>
   pivot_longer(cols = starts_with("route"), 
                names_to = "route_number", 
                values_to = "route_name")
-
 ```
 
 ## How many distinct stations serve the A train? 
@@ -88,7 +97,6 @@ A_train_stations <- ent_exit_df |>
   filter(route_name == "A") |>
   distinct(station_name, line) |>
   nrow()
-
 ```
 * There are `r A_train_stations` distinct stations that serve the A train.
 
@@ -103,24 +111,31 @@ A_train_ada_stations <- ent_exit_df |>
 * There are `r A_train_ada_stations` ADA-compliant stations that serve the A train.
 
 # Problem 2
-## Import and clean the _Mr. Trash Wheel _ dataset
+## Import and clean the _Mr. Trash Wheel_ dataset
 ```{r}
 library(readxl)
-Mr_trash_wheel =  readxl::read_excel("202309 Trash Wheel Collection Data.xlsx", sheet = "Mr. Trash Wheel", range = "A2:N586",na = c("NA", "", ".")) |>
+Mr_trash_wheel =  readxl::read_excel("202409 Trash Wheel Collection Data.xlsx", sheet = "Mr. Trash Wheel", range = "A2:N655",na = c("NA", "", ".")) |>
   janitor::clean_names() |>
   filter(!is.na(dumpster)) |> 
   mutate(sports_balls = as.integer(round(sports_balls)))
 ```
 ## Import and clean the _Professor Trash Wheel_ dataset and the _Gwynnda Trash Wheel_ dataset
 ```{r}
-Professor_trash_wheel =  readxl::read_excel("202309 Trash Wheel Collection Data.xlsx", sheet = "Professor Trash Wheel", range = "A2:M108",na = c("NA", "", ".")) |>
+Professor_trash_wheel =  readxl::read_excel("202409 Trash Wheel Collection Data.xlsx", sheet = "Professor Trash Wheel", range = "A2:M120",na = c("NA", "", ".")) |>
   janitor::clean_names()|>
   filter(!is.na(dumpster))
 
-Gwynnda_trash_wheel =  readxl::read_excel("202309 Trash Wheel Collection Data.xlsx", sheet = "Gwynnda Trash Wheel", range = "A2:L157",na = c("NA", "", ".")) |>
+Gwynnda_trash_wheel =  readxl::read_excel("202409 Trash Wheel Collection Data.xlsx", sheet = "Gwynnda Trash Wheel", range = "A2:L266",na = c("NA", "", ".")) |>
   janitor::clean_names()|>
   filter(!is.na(dumpster))
 ```
+## Describe these three datasets
+```{r}
+summary(Mr_trash_wheel)
+summary(Professor_trash_wheel)
+summary(Gwynnda_trash_wheel)
+```
+
 ## Combine the three datasets
 ```{r}
 # switch the year column of Mr. Trash Whell dataset to integer
@@ -135,10 +150,27 @@ trash_wheel_df <- bind_rows(
   Gwynnda_trash_wheel |>
     mutate(trash_wheel = "Gwynnda Trash Wheel")
 )
+trash_wheel_df
 ```
 * The combined dataset integrates information from three distinct trash wheels: Mr. Trash Wheel, Professor Trash Wheel, and Gwynnda Trash Wheel. 
 * The resulting dataset contains `r nrow(trash_wheel_df)` observations and `r ncol(trash_wheel_df)` variables.
-* The variables in the dataset include: _dumpster_(Mr:584; Professor:107; Gwynnda:156), _month_(January - December), _year_(Mr:2014-2023; Professor:2017-2023; Gwynnda:2021-2023) and so on.
+* The variables in the dataset include:
+ `dumpster`: the number of the dumpster (Mr:651; Professor:119; Gwynnda:262).  
+ `month`: the month of the year.(January - December)  
+ `year`: the year of the data collection.(Mr:2014-2024; Professor:2017-2024; Gwynnda:2021-2024)   
+ `date`: the date of the data collection.( Mr:2014-05-16~2024-06-11; Professor: 2017-01-02~2024-05-30; 2021-07-03~2024-06-07)  
+ `weight_tons`: the weight of trash collected in tons.(Mr:0.780 - 5.620; Professor:0.610-3.750; Gwynnda:0.770-4.240)  
+ `volum_cubic_yards`: the volume of trash collected in cubic yards.(Mr:7.0~20.0; Professor:6.0-18.0; Gwynnda:5.0-15.0)  
+ `plastic_botles`: the number of plastic bottles collected.(Mr:80-5940; Professor:657-9830; Gwynnda:0-5400)  
+ `polystyrene`: the number of polystyrene collected.(Mr:20-6540; Professor:180-11528; Gwynnda:0~5)  
+ `cigarette_butts`: the number of cigarette butts collected.(Mr:500-31000; Professor:3800-33320; Gwynnda:0.0-640.0)  
+ `glass_bottles`: the number of glass bottles collected.(Mr:0-110; Professor:0-49; Gwynnda:0-6400)  
+ `plastic_bags`: the number of plastic bags collected.(Mr:24-3750; Professor:140-13450; Gwynnda:0.0-3600.0)    
+ `wrappers`: the number of wrappers collected.(Mr:180-5085; Professor:2300-20100; Gwynnda:0-4900)  
+ `sports_balls`: the number of sports balls collected.(Mr:0-56)  
+ `home_powered`: the number of home powered collected.(Mr:0-22; Professor:10.17-22.00; Gwynnda:12.83-70.67)  
+ `trash_wheel`: the name of the trash wheel (Mr. Trash Wheel, Professor Trash Wheel, Gwynnda Trash Wheel).  
+ 
 * The total weight of trash collected by Professor Trash Wheel is `r sum(na.omit(Professor_trash_wheel$weight_tons))` tons.
 * In June 2022, Gwynnda collected a total of `r sum(Gwynnda_trash_wheel$weight_tons[Gwynnda_trash_wheel$month == "June" & Gwynnda_trash_wheel$year == 2022])` tons of trash.
 
@@ -195,6 +227,7 @@ anti_join(bakers, merged_data,
 write.csv(merged_data, "gbb_datasets/merged_data.csv", row.names = FALSE)
 ```
 * Cleaning steps:
+  1. Using na = c("NA", "", ".")/c("N/A", "NA", "UNKNOWN","", "Unknown") to clean the missing values.
   1. Clean column names using the `janitor::clean_names()` function.
   2. Remove the last name from the `baker_name` column using the `sub()` function.
   3. Rename the `baker_name` column to `baker`.
