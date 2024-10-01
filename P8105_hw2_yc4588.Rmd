@@ -40,7 +40,7 @@ ent_exit_df <- ent_exit |>
          ada)
 ent_exit_df
 ```
-* The dataset contains information about subway entrances and exits in New York City, with variables including _line_, _station_name_, _station_latitude_, _station_longitude_, _route1-route11_, _entry_, _vending_, _entrance_type_, and _ada_.
+* The dataset contains information about subway entrances and exits in New York City, with variables including _line_, _station_name_, _station_latitude_, _station_longitude_, _route1-route11_, _entry_, _vending_, _entrance_type_, and _ada_.  
  `line` is a categorical variable describing the NYC transit subway lines.  
  `station_name` is a categorical variable describing the names of the subway stations.  
  `station_latitude` and `station_longitude` are numerical variables representing the latitude and longitude of the subway stations.  
@@ -154,7 +154,7 @@ trash_wheel_df
 ```
 * The combined dataset integrates information from three distinct trash wheels: Mr. Trash Wheel, Professor Trash Wheel, and Gwynnda Trash Wheel. 
 * The resulting dataset contains `r nrow(trash_wheel_df)` observations and `r ncol(trash_wheel_df)` variables.
-* The variables in the dataset include:
+* The variables in the dataset include:  
  `dumpster`: the number of the dumpster (Mr:651; Professor:119; Gwynnda:262).  
  `month`: the month of the year.(January - December)  
  `year`: the year of the data collection.(Mr:2014-2024; Professor:2017-2024; Gwynnda:2021-2024)   
