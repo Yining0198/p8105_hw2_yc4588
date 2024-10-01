@@ -1,0 +1,246 @@
+---
+title: "p8105_hw2_yc4588"
+author: "Yining Cao"
+date: "2024-09-30"
+output: 
+  github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Problem 1
+## Import and clean the dataset
+```{r}
+library(readr)
+library(dplyr)
+ent_exit = read_csv("NYC_Transit_Subway_Entrance_And_Exit_Data.csv",na = c("NA", "", "."))
+colnames(ent_exit)
+```
+* The variables in the dataset include: _Division_(BMT, IND, etc),  _Line_("4 avenue", "42nd St Shuttle", "6 avenue", etc.), _Station Name_("25th St", "36th St", "45th St", etc) and so on.
+
+```{r}
+library(tidyr)
+ent_exit_df <- ent_exit |>
+  janitor::clean_names()|>
+  mutate(entry = case_match(
+    entry,
+    "YES" ~ TRUE,
+    "NO" ~ FALSE
+  )) |>
+  select(line,
+         station_name, 
+         station_latitude, 
+         station_longitude, 
+         starts_with("route"),
+         entry, 
+         vending, 
+         entrance_type, 
+         ada)
+```
+* The dataset contains information about subway entrances and exits in New York City, with variables including _line_, _station_name_, _station_latitude_, _station_longitude_, _route1-route11_, _entry_, _vending_, _entrance_type_, and _ada_.
+* cleaning steps:
+  1. Clean column names using the `janitor::clean_names()` function.
+  2. Convert the `entry` column to a logical variable using the `case_match()` function.
+  3. Select the columns of interest with `select()` function, including `line`, `station_name`, `station_latitude`, `station_longitude`, `route1` to `route11`, `entry`, `vending`, `entrance_type`, and `ada`.
+* This dataset contains `r nrow(ent_exit_df)` rows and `r ncol(ent_exit_df)` columns after cleaning.
+* These data are not tidy enough because the `route1` to `route11` columns are not in a long format. 
+
+## How many distinct satation are here?
+```{r}
+distinct_stations <- ent_exit_df |> 
+  distinct(line, station_name) |> 
+  nrow()
+```
+* There are `r distinct_stations` distinct stations in the dataset.
+
+## How many stations are ADA compliant?
+```{r}
+ada_stations <- ent_exit_df |>
+  filter(ada == "TRUE") |>
+  distinct(station_name, line) |>
+  nrow()
+```
+* There are `r ada_stations` ADA-compliant stations in the dataset.
+
+## What proportion of station entrances / exits without vending allow entrance?
+```{r}
+no_vending_entry <- ent_exit_df |>
+  filter(vending == "NO") |>
+  summarise(prop_entry = mean(entry, na.rm = TRUE))
+```
+* The proportion of station entrances/exits without vending that allow entrance is `r no_vending_entry$prop_entry`.
+
+## Reformat the data so that route number and route name are distinct
+```{r}
+ent_exit_df <- ent_exit_df |>
+  mutate(across(starts_with("route"), as.character)) |> 
+  pivot_longer(cols = starts_with("route"), 
+               names_to = "route_number", 
+               values_to = "route_name")
+
+```
+
+## How many distinct stations serve the A train? 
+```{r}
+A_train_stations <- ent_exit_df |>
+  filter(route_name == "A") |>
+  distinct(station_name, line) |>
+  nrow()
+
+```
+* There are `r A_train_stations` distinct stations that serve the A train.
+
+## Of the stations that serve the A train, how many are ADA compliant?
+```{r}
+A_train_ada_stations <- ent_exit_df |>
+  filter(route_name == "A") |>
+  filter(ada == "TRUE") |>
+  distinct(station_name, line) |>
+  nrow()
+```
+* There are `r A_train_ada_stations` ADA-compliant stations that serve the A train.
+
+# Problem 2
+## Import and clean the _Mr. Trash Wheel _ dataset
+```{r}
+library(readxl)
+Mr_trash_wheel =  readxl::read_excel("202309 Trash Wheel Collection Data.xlsx", sheet = "Mr. Trash Wheel", range = "A2:N586",na = c("NA", "", ".")) |>
+  janitor::clean_names() |>
+  filter(!is.na(dumpster)) |> 
+  mutate(sports_balls = as.integer(round(sports_balls)))
+```
+## Import and clean the _Professor Trash Wheel_ dataset and the _Gwynnda Trash Wheel_ dataset
+```{r}
+Professor_trash_wheel =  readxl::read_excel("202309 Trash Wheel Collection Data.xlsx", sheet = "Professor Trash Wheel", range = "A2:M108",na = c("NA", "", ".")) |>
+  janitor::clean_names()|>
+  filter(!is.na(dumpster))
+
+Gwynnda_trash_wheel =  readxl::read_excel("202309 Trash Wheel Collection Data.xlsx", sheet = "Gwynnda Trash Wheel", range = "A2:L157",na = c("NA", "", ".")) |>
+  janitor::clean_names()|>
+  filter(!is.na(dumpster))
+```
+## Combine the three datasets
+```{r}
+# switch the year column of Mr. Trash Whell dataset to integer
+Mr_trash_wheel <- Mr_trash_wheel |> 
+  mutate(year = as.integer(year))
+
+trash_wheel_df <- bind_rows(
+  Mr_trash_wheel |>
+    mutate(trash_wheel = "Mr. Trash Wheel"),
+  Professor_trash_wheel |>
+    mutate(trash_wheel = "Professor Trash Wheel"),
+  Gwynnda_trash_wheel |>
+    mutate(trash_wheel = "Gwynnda Trash Wheel")
+)
+```
+* The combined dataset integrates information from three distinct trash wheels: Mr. Trash Wheel, Professor Trash Wheel, and Gwynnda Trash Wheel. 
+* The resulting dataset contains `r nrow(trash_wheel_df)` observations and `r ncol(trash_wheel_df)` variables.
+* The variables in the dataset include: _dumpster_(Mr:584; Professor:107; Gwynnda:156), _month_(January - December), _year_(Mr:2014-2023; Professor:2017-2023; Gwynnda:2021-2023) and so on.
+* The total weight of trash collected by Professor Trash Wheel is `r sum(na.omit(Professor_trash_wheel$weight_tons))` tons.
+* In June 2022, Gwynnda collected a total of `r sum(Gwynnda_trash_wheel$weight_tons[Gwynnda_trash_wheel$month == "June" & Gwynnda_trash_wheel$year == 2022])` tons of trash.
+
+# Problem 3
+## Import and clean three datesets of individual bakers, their bakes, and their performance
+```{r}
+bakers = read_csv("gbb_datasets/bakers.csv",na = c("NA", "", ".")) |>
+  janitor::clean_names()|>
+  mutate(
+    baker_name = sub(" .*", "", baker_name)
+  ) |>
+  rename(baker = baker_name)|>
+  mutate(
+    baker = replace(baker, baker == "Jo", "Joanne")
+  )
+
+bakes = read_csv("gbb_datasets/bakes.csv", col_names = TRUE, na = c("NA", "", ".")) |>
+  janitor::clean_names() |>
+  mutate(
+    baker = replace(baker, baker == '"Jo"', "Joanne")
+  )
+
+results = read_csv("gbb_datasets/results.csv",skip = 2, na = c("N/A", "NA", "UNKNOWN","", "Unknown")) |>
+  janitor::clean_names()
+
+```
+
+## Merge the three datasets
+```{r}
+ merged_data = 
+  left_join(results, bakes, 
+            by = join_by(series, episode, baker)) |>
+  left_join(bakers,
+            by = join_by(series, baker)) |>
+  select(baker, everything())
+```
+
+## Checking for completeness and correctness across datasets
+```{r}
+anti_join(results, merged_data,
+          by = join_by(series, episode, baker, technical, result))
+
+anti_join(bakes, merged_data,
+          by = join_by(series, episode, baker, signature_bake,show_stopper))
+
+anti_join(bakers, merged_data, 
+          by = join_by(baker,series, baker_age,baker_occupation, hometown))
+
+```
+* These datasets are complete and correct because the `anti_join()` function returns an empty data frame for all three datasets.
+
+## Export the merged dataset
+```{r}
+write.csv(merged_data, "gbb_datasets/merged_data.csv", row.names = FALSE)
+```
+* Cleaning steps:
+  1. Clean column names using the `janitor::clean_names()` function.
+  2. Remove the last name from the `baker_name` column using the `sub()` function.
+  3. Rename the `baker_name` column to `baker`.
+  4. Replace the name "Jo" with "Joanne" in the `baker`columns of all three datasets.
+  5. Skip the first two rows in the `results` dataset using the `skip` argument.
+  6. After merging the datasets, check for completeness and correctness using the `anti_join()` function.
+  
+* The merged dataset contains `r nrow(merged_data)` observations and `r ncol(merged_data)` variables.
+* The variables in the dataset include: _baker_, _series_, _episode_, _technical_, _result_, _signature_bake_, _show_stopper_, _baker_age_, _baker_occupation_, and _hometown_.
+
+## Creating a reader-friendly table showing the star baker or winner of each episode in Seasons 5 through 10
+```{r}
+star_baker_table = merged_data |>
+  filter(result %in% c("STAR BAKER", "WINNER")) |>
+  filter(series %in% c(5:10)) |> 
+  arrange(series, episode) |>
+  select(episode, baker, series) |>
+  pivot_wider(
+    names_from = "series",
+    values_from = "baker"  ) |>
+  rename("series 5" = "5",
+         "series 6" = "6",
+         "series 7" = "7",
+         "series 8" = "8",
+         "series 9" = "9",
+         "series 10" = "10") |>
+  knitr::kable()
+
+star_baker_table
+```
+* Richard won the star baker or winner title 5 times in series 5.
+* Nadiya won the star baker or winner title 4 times in series 6.
+* Candice won the star baker or winner title 4 times in series 7.
+* Steven and Sophie won the star baker or winner title 3 times in series 8, respectively.
+* Rahul won the star baker or winner title 3 times in series 9.
+* Steph won the star baker or winner title 4 times in series 10.
+* The winners, such as Richard, Candice, and Steven, are overall predictable, while the winners, such as Nadiya, Sophie, and Steph, are relatively unexpected because they won fewer star baker titles or winner titles in the early episodes of their respective series, which may surprised the audience.
+
+## Import and clean viewers dataset
+```{r}
+viewers = read_csv("gbb_datasets/viewers.csv", na = c("NA", "", ".")) |>
+  janitor::clean_names()
+```
+## What was the average viewership in Season 1? In Season 5?
+```{r}
+head(viewers,10)
+```
+* The average viewership in Season 1 was `r mean(viewers$series_1, na.rm = TRUE)` million.
+* The average viewership in Season 5 was `r mean(viewers$series_5, na.rm = TRUE)` million.
