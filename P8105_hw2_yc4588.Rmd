@@ -172,7 +172,7 @@ trash_wheel_df
  `trash_wheel`: the name of the trash wheel (Mr. Trash Wheel, Professor Trash Wheel, Gwynnda Trash Wheel).  
  
 * The total weight of trash collected by Professor Trash Wheel is `r sum(na.omit(Professor_trash_wheel$weight_tons))` tons.
-* In June 2022, Gwynnda collected a total of `r sum(Gwynnda_trash_wheel$weight_tons[Gwynnda_trash_wheel$month == "June" & Gwynnda_trash_wheel$year == 2022])` tons of trash.
+* In June 2022, Gwynnda collected a total of `r sum(Gwynnda_trash_wheel$cigarette_butts[Gwynnda_trash_wheel$month == "June" & Gwynnda_trash_wheel$year == 2022])` tons of trash.
 
 # Problem 3
 ## Import and clean three datesets of individual bakers, their bakes, and their performance
@@ -182,10 +182,7 @@ bakers = read_csv("gbb_datasets/bakers.csv",na = c("NA", "", ".")) |>
   mutate(
     baker_name = sub(" .*", "", baker_name)
   ) |>
-  rename(baker = baker_name)|>
-  mutate(
-    baker = replace(baker, baker == "Jo", "Joanne")
-  )
+  rename(baker = baker_name)
 
 bakes = read_csv("gbb_datasets/bakes.csv", col_names = TRUE, na = c("NA", "", ".")) |>
   janitor::clean_names() |>
@@ -197,9 +194,25 @@ results = read_csv("gbb_datasets/results.csv",skip = 2, na = c("N/A", "NA", "UNK
   janitor::clean_names()
 
 ```
+## Checking for completeness and correctness across datasets
+```{r}
+anti_join(bakes, results,
+          by = join_by(series, baker))
+
+anti_join(bakes, bakers,
+          by = join_by(series, baker))
+
+anti_join(bakers, results, 
+          by = join_by(baker,series))
+
+```
 
 ## Merge the three datasets
 ```{r}
+bakers = bakers |>
+  mutate(
+    baker = replace(baker, baker == "Jo", "Joanne")
+  )
  merged_data = 
   left_join(results, bakes, 
             by = join_by(series, episode, baker)) |>
@@ -208,19 +221,6 @@ results = read_csv("gbb_datasets/results.csv",skip = 2, na = c("N/A", "NA", "UNK
   select(baker, everything())
 ```
 
-## Checking for completeness and correctness across datasets
-```{r}
-anti_join(results, merged_data,
-          by = join_by(series, episode, baker, technical, result))
-
-anti_join(bakes, merged_data,
-          by = join_by(series, episode, baker, signature_bake,show_stopper))
-
-anti_join(bakers, merged_data, 
-          by = join_by(baker,series, baker_age,baker_occupation, hometown))
-
-```
-* These datasets are complete and correct because the `anti_join()` function returns an empty data frame for all three datasets.
 
 ## Export the merged dataset
 ```{r}
@@ -244,27 +244,20 @@ star_baker_table = merged_data |>
   filter(result %in% c("STAR BAKER", "WINNER")) |>
   filter(series %in% c(5:10)) |> 
   arrange(series, episode) |>
-  select(episode, baker, series) |>
+  select(episode,baker, series, result) |>
   pivot_wider(
     names_from = "series",
-    values_from = "baker"  ) |>
+    values_from = "baker") |>
   rename("series 5" = "5",
          "series 6" = "6",
          "series 7" = "7",
          "series 8" = "8",
          "series 9" = "9",
-         "series 10" = "10") |>
-  knitr::kable()
+         "series 10" = "10")
 
 star_baker_table
 ```
-* Richard won the star baker or winner title 5 times in series 5.
-* Nadiya won the star baker or winner title 4 times in series 6.
-* Candice won the star baker or winner title 4 times in series 7.
-* Steven and Sophie won the star baker or winner title 3 times in series 8, respectively.
-* Rahul won the star baker or winner title 3 times in series 9.
-* Steph won the star baker or winner title 4 times in series 10.
-* The winners, such as Richard, Candice, and Steven, are overall predictable, while the winners, such as Nadiya, Sophie, and Steph, are relatively unexpected because they won fewer star baker titles or winner titles in the early episodes of their respective series, which may surprised the audience.
+* The winners, like Nadiya and Candice, were generally predictable because they earned multiple Star Baker titles during their seasons. Surprisingly, some winners, like Nancy and David, were more surprising, as they didn’t win the most Star Baker titles in their respective seasons.
 
 ## Import and clean viewers dataset
 ```{r}
@@ -275,5 +268,5 @@ viewers = read_csv("gbb_datasets/viewers.csv", na = c("NA", "", ".")) |>
 ```{r}
 head(viewers,10)
 ```
-* The average viewership in Season 1 was `r mean(viewers$series_1, na.rm = TRUE)` million.
-* The average viewership in Season 5 was `r mean(viewers$series_5, na.rm = TRUE)` million.
+* The average viewership in Season 1 was `r mean(viewers |> pull(series_1), na.rm = TRUE)` million.
+* The average viewership in Season 5 was `r mean(viewers |> pull(series_5), na.rm = TRUE)` million.
